@@ -1,0 +1,10 @@
+train: lego_dataset/images/train/ 
+val:  lego_dataset/images/val/
+test: lego_dataset/images/test/
+
+# number of classes
+nc: 6
+
+# #voc_labels = ('brick_2x2', 'brick_2x4', 'brick_1x6', 'plate_1x2', 'plate_2x2', 'plate_2x4')
+# class names 
+names: ["brick_2x2","brick_2x4", "brick_1x6","plate_1x2", "plate_2x2", "plate_2x4"]
