@@ -23,10 +23,10 @@ Blender scripts with detailed annotations are provided.
 ![Alt text](images/blender.jpg "Blender")
 
 1. Install required packages for internal Blender Python library to run Blender Python scripts:
-cd to your Blender Python dir `cd ~/blender-2.93.4-linux-x64/2.93/python`
-1.1 install ensurepip `./bin/python3.9 -m ensurepip`
-1.2 install pip `./bin/python3.9 -m pip install -U pip`
-1.3 install pascal-voc-writer for annotation extraction `./bin/python3.9 -m pip pascal-voc-writer`
+  1. cd to your Blender Python dir `cd ~/blender-2.93.4-linux-x64/2.93/python`
+  2. install ensurepip `./bin/python3.9 -m ensurepip`
+  3. install pip `./bin/python3.9 -m pip install -U pip`
+  4. install pascal-voc-writer for annotation extraction `./bin/python3.9 -m pip pascal-voc-writer`
 		
 2. Copy the contents of `blender` folder from this repo into to your blender directory, for eg. ~/home/blender-2.93.4-linux-x64
 3. With Blender open `rendering.blend
