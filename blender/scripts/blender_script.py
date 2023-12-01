@@ -1,23 +1,34 @@
-import bpy
-from pascal_voc_writer import Writer
-import random
-from datetime import datetime
+"""
+This is the current latest version of the script used in both Blender 2.93 & 3.65 scene files. 
+This script generates randomly placed Lego part on a varied background renderings using Blender object and camera manipulation API. 
+The goal of the script was to create a dataset to train Machine Learning object detection models.
+
+Some parts of the code were inspired and borrowed from forums in the Blender community.
+
+If the code does not work please create a github issue and I will look into as soon as I can.
+"""
+
+import os
 import math
 import mathutils
-import os
+import random
+from datetime import datetime
+
+import bpy
+from pascal_voc_writer import Writer
 
 
-# Choose one of rendering option
+# Choose one of rendering option as run_type
 #1. Render all
 #2. Render batch
 #3. Render individual parts
 #4. Render backgrounds
 
-# Run once with run_type = 1. This will generate around 400 images.
+# Run once with run_type = 1. This will generate 100 images.
 # Afterwards run script multiple times with run_type = 2. This will generate 500 extra images. 
-#Suggested 4-5 runs on run_type 2 to generate ~2,5k images for dataset with 6 lego parts.
+# Suggested 4-5 runs on run_type 2 to generate ~2,5k images for dataset with 6 lego parts.
 # First run will set batch 100 and next runs can be 500. 
-# For me Blender crashes if more than 600 renderings generated in one script run.
+# For me Blender crashes if more 400 images @ 640x640 resolution generated in one script run.
 
 run_type = 2
 
@@ -29,7 +40,7 @@ objects = []
 object_count = []
 start_range = 0 
 step_size = 15 # Default 15. Choose step size for part rotation when rendering indivdual parts. 
-batch_size = 100 # How many images to render. For me, more than 400 images @ 640x640 resolution crashes Blender.
+batch_size = 100 # How many images to render in first run on run_type_1. For me, more than 
 i = 0
 
 # Define colors, based on offical Lego RGB colors: 
@@ -65,11 +76,11 @@ output_dir_annotations = output_dir + '/annotations'
 
 print("Rendering output directory: ", output_dir)
 
-
+# When generating renderings in batches on run_type_2 select such size that does not crash Blender.
+# 500 for me worked well.
 if run_type == 2:
-    batch_size = 500
+    batch_size = 500 
 
-        
 # FUNCTIONS:
 
 # Update camera location:
@@ -93,7 +104,6 @@ def update_camera(camera, focus_point=mathutils.Vector((0.0, 0.0, 0.0)), distanc
     camera.rotation_euler = rot_quat.to_euler()
     # Use * instead of @ for Blender <2.8
     camera.location = rot_quat @ mathutils.Vector((0.0, 0.0, distance))
-
 
 # Functions to get annotaion bounding boxes 
 def clamp(x, minimum, maximum):
@@ -178,14 +188,13 @@ def camera_view_bounds_2d(scene, cam_ob, me_ob):
         round((max_y - min_y) * dim_y)   # Height
     )
 
-
 # Render scene in JPEG format
 def render_scene(it):
     bpy.context.scene.render.image_settings.file_format='JPEG'
     bpy.context.scene.render.filepath = output_dir_images + "/%0.5d.jpg"%it
     bpy.ops.render.render(use_viewport = True, write_still=True)
 
-# Export annotations of boundig boxes in VOC format
+# Export annotations of bounding boxes in VOC format
 def save_annotations(object, it):
     writer = Writer(output_dir_images + "/%0.5d.jpg"%it, r_settings.resolution_x, r_settings.resolution_y)
     if object is not None:
@@ -193,7 +202,6 @@ def save_annotations(object, it):
         part_name = str(object.name).split(".", 1)
         writer.addObject(part_name[0], bound_x, bound_y, bound_x+bound_w, bound_y+bound_h)
     writer.save(output_dir_annotations + "/%0.5d.xml"%it)
-
 
 # PROGRAM CODE:
 
@@ -259,8 +267,7 @@ for bg in background:
     bg.hide_set(True)
     bg.hide_render = True
 
-
-# GENERATING INDIVIDUAL OBJECT RENDERS
+# GENERATING INDIVIDUAL PARTS RENDERS
 
 # Render backgrounds
 if (run_type == 1 or run_type == 4): 
@@ -277,8 +284,7 @@ if (run_type == 1 or run_type == 4):
             start_range += 1
             
             bg.hide_set(True)
-            bg.hide_render = True
-            
+            bg.hide_render = True     
 
 # Render individual parts rotated around all axes
 if (run_type == 1 or run_type == 3):
@@ -298,7 +304,7 @@ if (run_type == 1 or run_type == 3):
             x.location = (0,0,0.5)
             x.rotation_euler = (0, 0, 0)
             
-            # rotate around x
+            # Rotate around x
             for x_or in range(0,360,step_size):
                 
                 # Adjust part rotation
@@ -313,7 +319,7 @@ if (run_type == 1 or run_type == 3):
                     bg.hide_set(True)
                     bg.hide_render = True
                     
-                # unhide one background randomly
+                # Unhide one background randomly
                 r3 = random.randint(0,len(background)-1)
                 background[r3].hide_set(False)
                 background[r3].hide_render = False     
@@ -328,16 +334,14 @@ if (run_type == 1 or run_type == 3):
                 # increase counter
                 start_range += 1   
             
-
             x.location = (0,0,0.5)
             x.rotation_euler = (0, 0, 0)
             
-            
-            # rotate around y
+            # Rotate around y
             for y_or in range(0,360,step_size):
                 
                 x.rotation_euler = (0, math.radians(y_or), 0)
-                
+         
                 r1 = random.randint(0, len(materials)-1) 
                 x.active_material = materials[r1]
                 
@@ -356,13 +360,11 @@ if (run_type == 1 or run_type == 3):
                 x.rotation_euler = (0, 0, 0)
 
                 start_range += 1   
-
-            
+       
             x.location = (0,0,0.5)
             x.rotation_euler = (0, 0, 0)
             
-            
-            # rotate around z
+            # Rotate around z
             for z_or in range(0,360,step_size):
                 
                 x.rotation_euler = (0, 0, math.radians(z_or))
@@ -386,15 +388,17 @@ if (run_type == 1 or run_type == 3):
 
                 start_range += 1   
             
-
             # Hide the part after finished rendering it's set
             x.hide_set(True)
             x.hide_render = True
-    # END OF GNEERATING INDIVIDUAL PARTS
+            
+    # END OF GENERATING INDIVIDUAL PARTS
 
+
+# GENERATE BATCH OF LEGO & BACKGROUND RENDERINGS
 if (run_type == 1 or run_type == 2):
 
-    # CODE FOR BATCH RENDERING
+    # Find the what is the number of existing rendered images in "images" directory.
     path, dirs, files = next(os.walk(output_dir+"/images"))
     file_count = len(files)
     start_range = file_count
@@ -423,12 +427,12 @@ if (run_type == 1 or run_type == 2):
             
             x = objects[obj_num]
 
-        # Unhide and select lego object that's in the list
+            # Unhide and select lego object that's in the list
             x.hide_set(False)
             x.hide_render = False
             x.select_set(True)
 
-        # Move lego object to a random location within given constriants
+            # Move lego object to a random location within given constriants
             x.location = (round(random.uniform(-1.5, 1.5), 2), round(random.uniform(-1.5, 1.5), 2), 0.5)
 
             # Lego orientation randomisation
@@ -442,8 +446,7 @@ if (run_type == 1 or run_type == 2):
         for x in objects:
             if x.hide_render == False:
                 object_count[cc][1] += 1
-            cc += 1
-            
+            cc += 1     
             
         # Background randomisation
         # Hide all backgrounds
@@ -451,7 +454,7 @@ if (run_type == 1 or run_type == 2):
             bg.hide_set(True)
             bg.hide_render = True
         
-        # unhide one background randomly
+        # Unhide one background randomly
         r3 = random.randint(0,len(background)-1)
         background[r3].hide_set(False)
         background[r3].hide_render = False      
@@ -475,8 +478,7 @@ if (run_type == 1 or run_type == 2):
                 
         writer.save(output_dir_annotations + "/%0.5d.xml"%iii)
 
-
-    # Print out times each Lego object was used
+    # Print out times each Lego part was used
     print("Object count: ")
     for cc in object_count:
         print(cc)
